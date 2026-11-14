@@ -2,6 +2,12 @@
 
 个人 AI 情报知识库：把原文转化为摘要、分类、评分和产品经理思考。简单本机 MVP，Python 3.10+，FastAPI + SQLite WAL + 原生 HTML/CSS/JavaScript。
 
+## 页面预览
+
+蓝白主题，桌面侧边导航与双列情报卡片，手机采用单列布局。截图为空知识库状态，不含虚构情报。
+
+![情报站蓝白界面](docs/images/ui-desktop.png)
+
 ## 本机启动（macOS / Linux）
 
 ```sh
