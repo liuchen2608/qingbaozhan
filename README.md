@@ -10,6 +10,8 @@
 
 ## 本机启动（macOS / Linux）
 
+需要可直接访问的HTTPS网站时，见[Render部署步骤](docs/Render部署.md)。仓库包含部署配置和单用户登录保护；需要在自己的Render账号创建服务，配置采用付费服务与持久磁盘，创建前核对费用。此说明不代表网站已部署。
+
 ```sh
 git clone https://github.com/liuchen2608/qingbaozhan.git
 cd qingbaozhan
@@ -86,7 +88,7 @@ X与Twitter同一status ID会去重；去空白后≥80字符的相同正文会�
 
 默认数据在`data/hub.sqlite3`，可用`HUB_DB`环境变量指定路径。停止服务后备份整个`data/`目录及自己的`.env`到安全位置。数据库、真实.env、虚拟环境均不提交GitHub。使用SQLite运行期备份API也可备份，不要在服务运行时只复制主数据库而忽略WAL。
 
-仅监听127.0.0.1，无用户认证，不要开放到公网。API文档在本机`/docs`。模型的分析和评分仍需人工核查，不代表独立事实验证或投资建议。
+默认本机启动仅监听127.0.0.1，不要求登录；公网部署必须启用HUB_PUBLIC_MODE并配置登录凭证及允许的域名，使用平台HTTPS，详见Render部署说明。API文档在本机`/docs`。模型的分析和评分仍需人工核查，不代表独立事实验证或投资建议。
 
 ## 验证
 

@@ -1,0 +1,24 @@
+# Persistent deployment. Render bills the service and disk; review its pricing before creating.
+services:
+  - type: web
+    name: qingbaozhan
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn hub.app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /healthz
+    disk:
+      name: intelligence-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.14
+      - key: HUB_PUBLIC_MODE
+        value: "1"
+      - key: HUB_DB
+        value: /var/data/hub.sqlite3
+      - key: HUB_USERNAME
+        sync: false
+      - key: HUB_PASSWORD
+        sync: false

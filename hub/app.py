@@ -13,12 +13,12 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query, Request, UploadFile
 from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from openpyxl import Workbook, load_workbook
 from pydantic import BaseModel, Field
 
 from . import model, store
 from .domain import CATEGORIES, identity, link, now, timestamp, validate_analysis
+from .access import protect, validate_configuration
 
 ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / '.env')
@@ -26,19 +26,15 @@ logger = logging.getLogger('hub')
 
 @asynccontextmanager
 async def lifespan(app):
+    validate_configuration()
     store.init()
     yield
 
 app = FastAPI(title='情报站', lifespan=lifespan)
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=['127.0.0.1', 'localhost', 'testserver'])
 
 @app.middleware('http')
 async def local_origin(request: Request, call_next):
-    if request.method not in ('GET', 'HEAD', 'OPTIONS'):
-        origin = request.headers.get('origin')
-        if origin and origin not in ('http://127.0.0.1:8765', 'http://localhost:8765'):
-            return JSONResponse({'detail': '拒绝跨站写入请求'}, status_code=403)
-    return await call_next(request)
+    return await protect(request, call_next)
 
 @app.exception_handler(ValueError)
 async def invalid(request, exc):

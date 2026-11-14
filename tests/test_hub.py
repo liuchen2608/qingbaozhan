@@ -153,5 +153,29 @@ class HubTests(unittest.TestCase):
             self.assertEqual(self.client.post(f'/api/items/{iid}/analyze').status_code,502)
             self.assertIsNone(self.client.get(f'/api/items/{iid}').json()['analysis'])
 
+    def test_public_deployment_access(self):
+        with patch.dict(os.environ, {'HUB_PUBLIC_MODE':'1', 'HUB_USERNAME':'owner', 'HUB_PASSWORD':'test-password-123456', 'RENDER_EXTERNAL_HOSTNAME':'hub.example'}):
+            with TestClient(app, base_url='https://hub.example') as client:
+                for path in ('/', '/app.js', '/api/items', '/api/export', '/docs'):
+                    r=client.get(path)
+                    self.assertEqual(r.status_code,401,path)
+                    self.assertIn('Basic',r.headers['www-authenticate'])
+                self.assertEqual(client.get('/healthz').status_code,200)
+                self.assertEqual(client.get('/api/items',auth=('owner','wrong')).status_code,401)
+                self.assertEqual(client.get('/api/items',headers={'Authorization':'Basic malformed'}).status_code,401)
+                r=client.get('/',auth=('owner','test-password-123456'))
+                self.assertEqual(r.status_code,200)
+                self.assertEqual(r.headers['cache-control'],'no-store')
+                value={'name':'部署来源','url':'https://example.com'}
+                self.assertEqual(client.post('/api/sources',json=value,auth=('owner','test-password-123456'),headers={'Origin':'https://evil.example'}).status_code,403)
+                self.assertEqual(client.post('/api/sources',json=value,auth=('owner','test-password-123456'),headers={'Origin':'https://hub.example'}).status_code,201)
+                self.assertEqual(client.get('/',auth=('owner','test-password-123456'),headers={'Host':'evil.example'}).status_code,400)
+
+    def test_public_configuration_fails_closed(self):
+        with patch.dict(os.environ,{'HUB_PUBLIC_MODE':'1','HUB_PASSWORD':'','HUB_USERNAME':''}):
+            with self.assertRaises(RuntimeError):
+                with TestClient(app):
+                    pass
+
 if __name__=='__main__':
     unittest.main()
